@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1c3441">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="kLa 紀錄">
+<title>kLa 測試現場紀錄</title>
+<style>
+:root{
+  --bg:#e8edf0;--panel:#ffffff;--ink:#15232b;--muted:#586a74;--line:#cdd6dc;
+  --steel:#1c3441;--steel-ink:#e9f1f5;--accent:#0a6d8a;--accent-ink:#ffffff;
+  --done:#2b7a4b;--done-bg:#e2f0e7;--wip:#a4660f;--wip-bg:#fbefd9;--danger:#b3261e;
+  --f:"PingFang TC","Noto Sans TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
+  --hdr:140px;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0e161b;--panel:#16222a;--ink:#e3ebef;--muted:#92a3ad;--line:#2a3b45;
+    --steel:#0a1318;--steel-ink:#dbe7ed;--accent:#46afcf;--accent-ink:#06212b;
+    --done:#63c28a;--done-bg:#15301f;--wip:#e3a64b;--wip-bg:#33260f;--danger:#f0716a;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.5}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:active{transform:scale(.98)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}button:active{transform:none}}
+
+/* header */
+.top{position:sticky;top:0;z-index:10;background:var(--steel);color:var(--steel-ink);padding:10px 14px 12px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;max-width:640px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:8px}
+h1{font-size:17px;margin:0;font-weight:700}
+.ver{font-size:12px;padding:1px 8px;border:1px solid rgba(255,255,255,.4);border-radius:999px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.status{display:flex;gap:6px;align-items:center;font-size:12px;text-align:right}
+.net{background:var(--wip);color:#1a1100;padding:1px 8px;border-radius:999px;font-weight:700;white-space:nowrap}
+.saved{opacity:.85;font-variant-numeric:tabular-nums}
+.saved.err{color:#ffb4ae;font-weight:700;opacity:1}
+.seg{display:grid;grid-template-columns:1fr 1fr;margin:10px auto 0;max-width:640px;background:rgba(255,255,255,.09);border-radius:10px;padding:3px}
+.seg button{border:0;background:transparent;padding:8px;border-radius:8px;font-weight:700;color:var(--steel-ink);opacity:.7}
+.seg button[aria-selected="true"]{background:var(--panel);color:var(--ink);opacity:1}
+.progress{display:flex;align-items:center;gap:10px;margin:10px auto 0;max-width:640px;font-size:13px;font-variant-numeric:tabular-nums}
+.track{flex:1;height:6px;background:rgba(255,255,255,.16);border-radius:3px;overflow:hidden}
+#progFill{height:100%;width:0;background:var(--done);transition:width .3s}
+
+main{max-width:640px;margin:0 auto;padding:14px 12px 48px}
+
+/* current appendix */
+.cur{background:var(--panel);border:1px solid var(--line);border-top:6px solid var(--accent);border-radius:14px;padding:14px 14px 16px;scroll-margin-top:calc(var(--hdr) + 10px)}
+.cur-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.app-id{display:flex;align-items:baseline;gap:6px}
+.app-word{font-size:16px;color:var(--muted);font-weight:700}
+.app-no{font-size:60px;line-height:1;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.app-of{font-size:16px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pill{font-size:13px;font-weight:700;padding:4px 11px;border-radius:999px;white-space:nowrap;margin-top:4px}
+.pill.st-none{background:var(--bg);color:var(--muted)}
+.pill.st-wip{background:var(--wip-bg);color:var(--wip)}
+.pill.st-done{background:var(--done-bg);color:var(--done)}
+.grp{margin-top:6px;font-size:14px;color:var(--muted)}
+.params{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:12px 0 4px}
+.params > div{background:var(--panel);padding:8px 10px;min-width:0}
+.params dt{font-size:12px;color:var(--muted)}
+.params dd{margin:0;font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.params dd small{font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.params .docno{font-size:13px;font-weight:600;white-space:normal;line-height:1.3;display:inline-block}
+.p-in{width:4.2em;font-size:18px;font-weight:700;padding:2px 6px;border:1px dashed var(--wip);border-radius:6px;background:var(--wip-bg)}
+
+.tb{border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;margin-top:10px}
+.tb.filled{border-color:var(--done);background:var(--done-bg)}
+.tb-head{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;font-weight:700}
+.tb-date{color:var(--muted);font-weight:500;font-size:13px;font-variant-numeric:tabular-nums}
+.tb-date .man{color:var(--wip);font-weight:700;margin-left:4px}
+.tb-time{font-size:42px;line-height:1.15;font-weight:800;font-variant-numeric:tabular-nums;margin:4px 0 10px}
+.tb-time.empty{color:var(--line)}
+.tb-btns{display:grid;grid-template-columns:1.5fr 1fr .8fr;gap:8px}
+.tb-btns button{min-height:50px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:15px;padding:4px 6px}
+.tb-btns .b-now{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tb-btns .b-clr{color:var(--danger)}
+.warnline{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:var(--wip-bg);color:var(--wip);font-size:14px;font-weight:700}
+.note{display:block;margin-top:12px;font-size:14px;font-weight:700}
+.note textarea{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);resize:vertical;font-weight:400;font-size:16px}
+.nav{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.nav button{min-height:52px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:700;font-size:16px}
+.nav button.go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.nav button:disabled{opacity:.35}
+
+/* list */
+h2{font-size:15px;margin:24px 4px 6px;color:var(--muted)}
+.lg{font-size:13px;color:var(--muted);margin:12px 4px 6px;font-weight:700}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px}
+.row.st-wip{border-left-color:var(--wip)}
+.row.st-done{border-left-color:var(--done)}
+.row.is-cur{outline:2px solid var(--accent);outline-offset:-1px}
+.r-no{display:flex;flex-direction:column;align-items:center;min-width:3.4em;line-height:1.1}
+.r-no small{font-size:10px;color:var(--muted)}
+.r-no b{font-size:20px;font-variant-numeric:tabular-nums}
+.r-par{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:0 10px;font-variant-numeric:tabular-nums}
+.r-t{font-size:13px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.4;white-space:nowrap}
+.r-t .nil{color:var(--muted)}
+
+/* tools */
+.tools{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+.tool-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tool-row button{min-height:52px;border-radius:10px;border:1px solid var(--accent);background:var(--panel);color:var(--accent);font-weight:700;font-size:16px}
+.danger-link{margin-top:12px;width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--danger);font-weight:600}
+.foot{font-size:13px;color:var(--muted);margin:12px 2px 0;line-height:1.6}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:30;background:rgba(5,12,16,.55);display:flex;align-items:flex-end;justify-content:center}
+.modal[hidden]{display:none}
+.sheet{background:var(--panel);width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+@media (min-width:600px){.modal{align-items:center}.sheet{border-radius:16px}}
+.sheet h3{margin:0;font-size:18px}
+.m-sub{margin:2px 0 12px;color:var(--muted);font-size:14px}
+.m-date{display:block;font-size:14px;font-weight:700}
+.m-date input{display:block;width:100%;margin-top:4px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:16px}
+.hms-label{font-size:14px;font-weight:700;margin-top:12px}
+.hms{display:flex;align-items:center;gap:6px;margin-top:4px}
+.hms input{width:100%;text-align:center;font-size:32px;font-weight:800;padding:8px 0;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-variant-numeric:tabular-nums}
+.hms span{font-size:28px;font-weight:800;color:var(--muted)}
+.hms-cap{display:flex;gap:6px;font-size:12px;color:var(--muted);text-align:center}
+.hms-cap span{flex:1}
+.hms-cap i{width:14px}
+.m-err{color:var(--danger);font-size:14px;font-weight:700;min-height:1.5em;margin:8px 0 4px}
+.m-btns{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}
+.m-btns button{min-height:52px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:700;font-size:16px}
+.m-btns .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:15px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:40;max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<header class="top" id="top">
+  <div class="bar">
+    <div class="brand"><h1>kLa 現場紀錄</h1><span class="ver" id="ver"></span></div>
+    <div class="status"><span class="net" id="net" hidden>離線中</span><span class="saved" id="saved"></span></div>
+  </div>
+  <div class="seg" role="tablist" aria-label="選擇設備">
+    <button role="tab" data-dev="75">75 L Fermentor</button>
+    <button role="tab" data-dev="500">500 L Fermentor</button>
+  </div>
+  <div class="progress"><div class="track"><div id="progFill"></div></div><span id="progText"></span></div>
+</header>
+
+<main>
+  <section class="cur" id="cur" aria-live="polite">
+    <div class="cur-head">
+      <div class="app-id"><span class="app-word">Appendix</span><span class="app-no" id="curNo"></span><span class="app-of" id="curOf"></span></div>
+      <span class="pill" id="curPill"></span>
+    </div>
+    <div class="grp" id="curGroup"></div>
+    <dl class="params" id="params"></dl>
+
+    <div class="tb" id="tb-s">
+      <div class="tb-head"><span>大約開始時間</span><span class="tb-date" id="d-s"></span></div>
+      <div class="tb-time" id="t-s"></div>
+      <div class="tb-btns">
+        <button class="b-now" data-act="now" data-w="s">填入現在時間</button>
+        <button class="b-man" data-act="man" data-w="s">手動輸入</button>
+        <button class="b-clr" data-act="clr" data-w="s">清除</button>
+      </div>
+    </div>
+    <div class="tb" id="tb-e">
+      <div class="tb-head"><span>大約結束時間</span><span class="tb-date" id="d-e"></span></div>
+      <div class="tb-time" id="t-e"></div>
+      <div class="tb-btns">
+        <button class="b-now" data-act="now" data-w="e">填入現在時間</button>
+        <button class="b-man" data-act="man" data-w="e">手動輸入</button>
+        <button class="b-clr" data-act="clr" data-w="e">清除</button>
+      </div>
+    </div>
+    <p class="warnline" id="orderWarn" hidden>結束時間早於開始時間，請確認。</p>
+
+    <label class="note">註記
+      <textarea id="note" rows="2" placeholder="現場狀況或異常說明（選填）"></textarea>
+    </label>
+
+    <div class="nav">
+      <button id="prev">‹ 上一個</button>
+      <button id="next">下一個 ›</button>
+    </div>
+  </section>
+
+  <h2>全部項目（點選可切換）</h2>
+  <div id="list"></div>
+
+  <h2>匯出與管理</h2>
+  <section class="tools">
+    <div class="tool-row">
+      <button id="expCsv">匯出 CSV</button>
+      <button id="expXlsx">匯出 Excel</button>
+    </div>
+    <button class="danger-link" id="resetDev"></button>
+    <p class="foot">每次按鈕操作都會立即存在這支手機的瀏覽器中，斷網、關閉 App 或切到其他 App 都不會遺失。請用同一個瀏覽器、同一個網址開啟，測試完成後匯出備份。<br>目前版本 <b id="verFoot"></b></p>
+  </section>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h3 id="mTitle"></h3>
+    <p class="m-sub" id="mSub"></p>
+    <label class="m-date">日期<input type="date" id="mDate"></label>
+    <div class="hms-label">時間（24 小時制）</div>
+    <div class="hms">
+      <input id="mH" inputmode="numeric" maxlength="8" autocomplete="off" aria-label="時">
+      <span>:</span>
+      <input id="mM" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="分">
+      <span>:</span>
+      <input id="mS" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="秒">
+    </div>
+    <div class="hms-cap"><span>時</span><i></i><span>分</span><i></i><span>秒</span></div>
+    <p class="m-err" id="mErr"></p>
+    <div class="m-btns">
+      <button id="mCancel">取消</button>
+      <button id="mOk" class="primary">確定填入</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+const APP_VERSION = '1.0.1';
+const KEY = 'kla-field-record';
+const $ = id => document.getElementById(id);
+$('ver').textContent = 'v' + APP_VERSION;
+$('verFoot').textContent = 'v' + APP_VERSION;
+document.title = 'kLa 測試現場紀錄 v' + APP_VERSION;
+
+/* ---------- 表格資料（依附件 Table 1） ---------- */
+const DEV = {
+  '75':  {label:'75 L',  name:'75 L Fermentor',  doc:'PDIC-017 Ver.01', air:'AirFlow', airU:'slpm', file:'75L',  rows:[]},
+  '500': {label:'500 L', name:'500 L Fermentor', doc:'PDIC-018 Ver.01', air:'通氣量',  airU:'vvm',  file:'500L', rows:[]}
+};
+(function build(){
+  let n = 1;
+  for (const t of [30, 37]) for (const [v, a] of [[30,30],[35,35],[50,50]]) for (const r of [50,100,150])
+    DEV['75'].rows.push({no:n++, temp:t, p:'0.1', vol:v, air:a, rpm:r, grp:'溫度 ' + t + '°C'});
+  n = 1;
+  for (const v of [150,250,350]) for (const a of [1,1.5]) for (const r of [50,100,200,300,400])
+    DEV['500'].rows.push({no:n++, temp:37, p:'0.1', vol:v, air:a, rpm:r, grp:'工作體積 ' + v + ' kg'});
+})();
+
+/* ---------- 本機儲存 ---------- */
+function blank(){ return {ver:1, dev:'75', cur:{'75':1,'500':1}, rec:{'75':{},'500':{}}, saved:0}; }
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return blank();
+    const s = JSON.parse(raw), b = blank();
+    const cur = Object.assign(b.cur, s.cur || {});
+    for (const k of ['75','500']) { const c = +cur[k]; cur[k] = (c >= 1 && c <= DEV[k].rows.length) ? c : 1; }
+    return {ver:1, dev: DEV[s.dev] ? s.dev : '75', cur,
+      rec:{'75':(s.rec && s.rec['75']) || {}, '500':(s.rec && s.rec['500']) || {}}, saved:s.saved || 0};
+  }catch(e){ return blank(); }
+}
+let S = load();
+let storageOK = true;
+function save(){
+  S.saved = Date.now();
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); storageOK = true; }
+  catch(e){ storageOK = false; }
+  showSaved();
+}
+function showSaved(){
+  const el = $('saved');
+  if (!storageOK){ el.textContent = '無法儲存，請立即匯出'; el.classList.add('err'); return; }
+  el.classList.remove('err');
+  el.textContent = S.saved ? '已存於本機 ' + tw(new Date(S.saved)).t : '尚未填寫';
+}
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+
+/* ---------- 台灣時間 ---------- */
+const TWF = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Taipei', year:'numeric', month:'2-digit', day:'2-digit',
+  hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'});
+function tw(d){
+  const o = {};
+  for (const p of TWF.formatToParts(d || new Date())) o[p.type] = p.value;
+  const h = o.hour === '24' ? '00' : o.hour;
+  return {d: o.year + '-' + o.month + '-' + o.day, t: h + ':' + o.minute + ':' + o.second};
+}
+
+/* ---------- 取值 ---------- */
+const dev = () => DEV[S.dev];
+const curNo = () => S.cur[S.dev];
+const row = () => dev().rows[curNo() - 1];
+const EMPTY = {s:null, e:null, note:'', p:''};
+function rec(no, create){
+  const m = S.rec[S.dev];
+  if (!m[no] && create) m[no] = {s:null, e:null, note:'', p:''};
+  return m[no] || EMPTY;
+}
+function status(r){ return (r.s && r.e) ? 'done' : (r.s || r.e) ? 'wip' : 'none'; }
+const ST = {none:'未開始', wip:'進行中', done:'已完成'};
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- 畫面 ---------- */
+function cell(k, v){ return '<div><dt>' + k + '</dt><dd>' + v + '</dd></div>'; }
+function paramCells(d, rw, r){
+  const p = rw.p !== null
+    ? rw.p + '<small>bar</small>'
+    : '<input id="pIn" class="p-in" inputmode="decimal" placeholder="填寫" value="' + esc(r.p || '') + '" aria-label="槽壓 bar"><small>bar</small>';
+  return cell('溫度', rw.temp + '<small>°C</small>') + cell('槽壓', p) + cell('工作體積', rw.vol + '<small>kg</small>')
+       + cell(d.air, rw.air + '<small>' + d.airU + '</small>') + cell('轉速', rw.rpm + '<small>rpm</small>')
+       + cell('來源文件', '<span class="docno">' + d.doc + '</span>');
+}
+function render(){
+  const d = dev(), rw = row(), r = rec(rw.no);
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.dev === S.dev)));
+  const done = d.rows.filter(x => status(rec(x.no)) === 'done').length;
+  $('progFill').style.width = (done / d.rows.length * 100) + '%';
+  $('progText').textContent = '已完成 ' + done + ' / ' + d.rows.length;
+  $('curNo').textContent = rw.no;
+  $('curOf').textContent = '/ ' + d.rows.length;
+  const st = status(r);
+  $('curPill').textContent = ST[st];
+  $('curPill').className = 'pill st-' + st;
+  $('curGroup').textContent = d.name + '　' + rw.grp;
+  $('params').innerHTML = paramCells(d, rw, r);
+  for (const w of ['s','e']){
+    const v = r[w];
+    $('tb-' + w).classList.toggle('filled', !!v);
+    $('t-' + w).textContent = v ? v.t : '--:--:--';
+    $('t-' + w).classList.toggle('empty', !v);
+    $('d-' + w).innerHTML = v ? esc(v.d) + (v.m ? '<span class="man">手動</span>' : '') : '';
+  }
+  $('orderWarn').hidden = !(r.s && r.e && (r.e.d + ' ' + r.e.t) < (r.s.d + ' ' + r.s.t));
+  if (document.activeElement !== $('note')) $('note').value = r.note || '';
+  $('prev').disabled = rw.no === 1;
+  $('next').disabled = rw.no === d.rows.length;
+  $('next').classList.toggle('go', st === 'done' && rw.no < d.rows.length);
+  $('resetDev').textContent = '清除 ' + d.name + ' 的全部紀錄';
+  renderList();
+  showSaved();
+}
+function renderList(){
+  const d = dev(); let h = '', g = '';
+  for (const rw of d.rows){
+    if (rw.grp !== g){ g = rw.grp; h += '<div class="lg">' + g + '</div>'; }
+    const r = rec(rw.no), st = status(r);
+    h += '<button class="row st-' + st + (rw.no === curNo() ? ' is-cur' : '') + '" data-no="' + rw.no + '" aria-label="Appendix ' + rw.no + ' ' + ST[st] + '">'
+       + '<span class="r-no"><small>Appendix</small><b>' + rw.no + '</b></span>'
+       + '<span class="r-par"><span>' + rw.temp + '°C</span><span>' + rw.vol + ' kg</span><span>' + rw.air + ' ' + d.airU + '</span><span>' + rw.rpm + ' rpm</span></span>'
+       + '<span class="r-t">起 ' + (r.s ? r.s.t : '<span class="nil">--:--:--</span>') + '<br>迄 ' + (r.e ? r.e.t : '<span class="nil">--:--:--</span>') + '</span>'
+       + '</button>';
+  }
+  $('list').innerHTML = h;
+}
+function fitHeader(){ document.documentElement.style.setProperty('--hdr', $('top').offsetHeight + 'px'); }
+function goTo(no, scroll){
+  flushNote();
+  S.cur[S.dev] = no; save(); render();
+  if (scroll) $('cur').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ---------- 提示 ---------- */
+let toastT;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+}
+const buzz = () => { try{ navigator.vibrate && navigator.vibrate(30); }catch(e){} };
+
+/* ---------- 三個按鈕 ---------- */
+$('cur').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const act = b.dataset.act, w = b.dataset.w, lbl = w === 's' ? '開始' : '結束';
+  const rw = row(), r = rec(rw.no);
+  if (act === 'now'){
+    const v = tw();
+    if (r[w] && !confirm('Appendix ' + rw.no + ' 已有' + lbl + '時間 ' + r[w].t + '\n要改成現在時間 ' + v.t + ' 嗎？')) return;
+    rec(rw.no, true)[w] = v; save(); render(); buzz();
+    toast('Appendix ' + rw.no + ' ' + lbl + '時間 ' + v.t);
+  } else if (act === 'man'){
+    openModal(w);
+  } else if (act === 'clr'){
+    if (!r[w]) { toast('這一格目前是空的'); return; }
+    if (!confirm('確定清除 Appendix ' + rw.no + ' 的' + lbl + '時間 ' + r[w].t + '？')) return;
+    rec(rw.no, true)[w] = null; save(); render();
+    toast('已清除 Appendix ' + rw.no + ' ' + lbl + '時間');
+  }
+});
+$('prev').addEventListener('click', () => { if (curNo() > 1) goTo(curNo() - 1, true); });
+$('next').addEventListener('click', () => { if (curNo() < dev().rows.length) goTo(curNo() + 1, true); });
+$('list').addEventListener('click', e => {
+  const b = e.target.closest('.row'); if (b) goTo(+b.dataset.no, true);
+});
+document.querySelector('.seg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-dev]'); if (!b || b.dataset.dev === S.dev) return;
+  flushNote(); S.dev = b.dataset.dev; save(); render(); window.scrollTo({top:0});
+});
+$('params').addEventListener('input', e => {
+  if (e.target.id !== 'pIn') return;
+  rec(row().no, true).p = e.target.value.trim(); save();
+});
+
+/* 註記：輸入即存 */
+let noteT = null;
+function flushNote(){
+  if (noteT === null) return;
+  clearTimeout(noteT); noteT = null;
+  rec(row().no, true).note = $('note').value; save();
+}
+$('note').addEventListener('input', () => { clearTimeout(noteT); noteT = setTimeout(flushNote, 400); });
+$('note').addEventListener('blur', flushNote);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushNote(); });
+window.addEventListener('pagehide', flushNote);
+
+/* ---------- 手動輸入 ---------- */
+let mWhich = null;
+function openModal(w){
+  mWhich = w;
+  const rw = row(), r = rec(rw.no), v = r[w] || tw();
+  $('mTitle').textContent = '手動輸入' + (w === 's' ? '開始' : '結束') + '時間';
+  $('mSub').textContent = dev().name + '　Appendix ' + rw.no;
+  $('mDate').value = v.d;
+  const [h, m, s] = v.t.split(':');
+  $('mH').value = h; $('mM').value = m; $('mS').value = s;
+  $('mErr').textContent = '';
+  $('modal').hidden = false;
+  setTimeout(() => { $('mH').focus(); $('mH').select(); }, 60);
+}
+function closeModal(){ $('modal').hidden = true; mWhich = null; }
+$('mCancel').addEventListener('click', closeModal);
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').hidden) closeModal(); });
+$('mH').addEventListener('input', e => {
+  const v = e.target.value;
+  const m = v.match(/^(\d{1,2})[:：](\d{1,2})(?:[:：](\d{1,2}))?$/) || v.match(/^(\d{2})(\d{2})(\d{2})$/);
+  if (m){ $('mH').value = m[1]; $('mM').value = m[2]; if (m[3]) $('mS').value = m[3]; $('mS').focus(); $('mS').select(); return; }
+  if (/^\d{2}$/.test(v)){ $('mM').focus(); $('mM').select(); }
+});
+$('mM').addEventListener('input', e => { if (/^\d{2}$/.test(e.target.value)){ $('mS').focus(); $('mS').select(); } });
+['mH','mM','mS'].forEach(id => $(id).addEventListener('focus', e => e.target.select()));
+$('mOk').addEventListener('click', () => {
+  const hv = $('mH').value.trim(), mv = $('mM').value.trim(), sv = $('mS').value.trim(), d = $('mDate').value;
+  if (![hv, mv, sv].every(x => /^\d{1,2}$/.test(x)) || +hv > 23 || +mv > 59 || +sv > 59){
+    $('mErr').textContent = '時間不正確：時 0–23，分與秒 0–59'; return;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)){ $('mErr').textContent = '請選擇日期'; return; }
+  const pad = x => String(+x).padStart(2, '0');
+  const rw = row(), lbl = mWhich === 's' ? '開始' : '結束';
+  const t = pad(hv) + ':' + pad(mv) + ':' + pad(sv);
+  rec(rw.no, true)[mWhich] = {d, t, m:1};
+  save(); closeModal(); render(); buzz();
+  toast('Appendix ' + rw.no + ' ' + lbl + '時間 ' + t + '（手動）');
+});
+
+/* ---------- 匯出 ---------- */
+function tableData(){
+  const d = dev();
+  const head = ['Appendix','溫度(°C)','槽壓(bar)','工作體積(kg)', d.air + '(' + d.airU + ')','轉速(rpm)',
+                '開始日期','大約開始時間(hh:mm:ss)','結束日期','大約結束時間(hh:mm:ss)','註記'];
+  const rows = d.rows.map(rw => {
+    const r = rec(rw.no);
+    let p;
+    if (rw.p !== null) p = Number(rw.p);
+    else { const pv = (r.p || '').trim(); p = pv === '' ? '' : (isFinite(+pv) ? +pv : pv); }
+    return [rw.no, rw.temp, p, rw.vol, rw.air, rw.rpm,
+            r.s ? r.s.d : '', r.s ? r.s.t : '', r.e ? r.e.d : '', r.e ? r.e.t : '', r.note || ''];
+  });
+  return {head, rows};
+}
+function fname(ext){
+  const n = tw(); return 'kLa_' + dev().file + '_現場紀錄_' + n.d.replace(/-/g,'') + '_' + n.t.replace(/:/g,'') + '.' + ext;
+}
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+async function deliver(blob, name){
+  if (isIOS && navigator.canShare){
+    try{
+      const file = new File([blob], name, {type: blob.type});
+      if (navigator.canShare({files:[file]})){
+        await navigator.share({files:[file]});
+        toast('已產生 ' + name);
+        return;
+      }
+    }catch(e){ if (e && e.name === 'AbortError') return; }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  toast('已下載 ' + name);
+}
+$('expCsv').addEventListener('click', () => {
+  flushNote();
+  const {head, rows} = tableData();
+  const q = v => { v = v == null ? '' : String(v); return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const csv = '\ufeff' + [head, ...rows].map(r => r.map(q).join(',')).join('\r\n') + '\r\n';
+  deliver(new Blob([csv], {type:'text/csv;charset=utf-8'}), fname('csv'));
+});
+$('expXlsx').addEventListener('click', () => {
+  flushNote();
+  const d = dev(), {head, rows} = tableData(), n = tw();
+  const done = d.rows.filter(x => status(rec(x.no)) === 'done').length;
+  const blob = XL.build([
+    {name:'紀錄', rows:[head, ...rows], widths:[10,10,10,12,14,10,12,22,12,22,30], freeze:true},
+    {name:'資訊', rows:[['項目','內容'],['設備', d.name],['來源文件', d.doc + ' Table 1'],
+      ['匯出時間（台灣）', n.d + ' ' + n.t],['完成項目', done + ' / ' + d.rows.length],['App 版本','v' + APP_VERSION]],
+      widths:[18,36], freeze:false}
+  ]);
+  deliver(blob, fname('xlsx'));
+});
+$('resetDev').addEventListener('click', () => {
+  const d = dev();
+  if (!confirm('確定清除 ' + d.name + ' 的全部時間與註記？\n此動作無法復原，建議先匯出備份。')) return;
+  if (!confirm('再次確認：清除 ' + d.name + ' 全部紀錄？')) return;
+  noteT = null; S.rec[S.dev] = {}; S.cur[S.dev] = 1; save(); render(); window.scrollTo({top:0});
+  toast('已清除 ' + d.name + ' 全部紀錄');
+});
+
+/* ---------- 網路狀態、多分頁同步、離線快取 ---------- */
+function net(){ $('net').hidden = navigator.onLine; }
+window.addEventListener('online', net); window.addEventListener('offline', net);
+window.addEventListener('storage', e => { if (e.key === KEY){ S = load(); render(); } });
+window.addEventListener('resize', fitHeader);
+if ('serviceWorker' in navigator && location.protocol === 'https:'){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// XLSX-START
+const XL = (function(){
+  const enc = new TextEncoder();
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(b){ let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function zip(files){
+    const parts = [], cd = []; let off = 0;
+    const now = new Date();
+    const dt = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF;
+    const dd = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+    for (const f of files){
+      const name = enc.encode(f.name), data = enc.encode(f.data), crc = crc32(data);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint16(10, dt, true); h.setUint16(12, dd, true); h.setUint32(14, crc, true);
+      h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+      parts.push(new Uint8Array(h.buffer), name, data);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+      c.setUint16(10, 0, true); c.setUint16(12, dt, true); c.setUint16(14, dd, true); c.setUint32(16, crc, true);
+      c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, name.length, true);
+      c.setUint32(42, off, true);
+      cd.push(new Uint8Array(c.buffer), name);
+      off += 30 + name.length + data.length;
+    }
+    const cdSize = cd.reduce((a, b) => a + b.length, 0);
+    const e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+    e.setUint32(12, cdSize, true); e.setUint32(16, off, true);
+    return new Blob([...parts, ...cd, new Uint8Array(e.buffer)], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  const x = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'');
+  function col(i){ let s = ''; i++; while (i > 0){ const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+  const HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const W = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+  const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const P = 'http://schemas.openxmlformats.org/package/2006/relationships';
+  const STYLES = HEAD + '<styleSheet xmlns="' + W + '"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+    + '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
+    + '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    + '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>'
+    + '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  function sheet(rows, widths, freeze){
+    let s = HEAD + '<worksheet xmlns="' + W + '">';
+    if (freeze) s += '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
+    if (widths) s += '<cols>' + widths.map((w, i) => '<col min="' + (i+1) + '" max="' + (i+1) + '" width="' + w + '" customWidth="1"/>').join('') + '</cols>';
+    s += '<sheetData>';
+    rows.forEach((r, ri) => {
+      s += '<row r="' + (ri+1) + '">';
+      r.forEach((v, ci) => {
+        const ref = col(ci) + (ri+1), st = ri === 0 ? ' s="1"' : '';
+        if (v === '' || v == null) return;
+        if (typeof v === 'number' && isFinite(v)) s += '<c r="' + ref + '"' + st + '><v>' + v + '</v></c>';
+        else s += '<c r="' + ref + '" t="inlineStr"' + st + '><is><t xml:space="preserve">' + x(v) + '</t></is></c>';
+      });
+      s += '</row>';
+    });
+    return s + '</sheetData></worksheet>';
+  }
+  function build(sheets){
+    const files = [];
+    files.push({name:'[Content_Types].xml', data: HEAD + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+      + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>'
+      + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+      + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+      + sheets.map((s, i) => '<Override PartName="/xl/worksheets/sheet' + (i+1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')
+      + '</Types>'});
+    files.push({name:'_rels/.rels', data: HEAD + '<Relationships xmlns="' + P + '"><Relationship Id="rId1" Type="' + R + '/officeDocument" Target="xl/workbook.xml"/></Relationships>'});
+    files.push({name:'xl/workbook.xml', data: HEAD + '<workbook xmlns="' + W + '" xmlns:r="' + R + '"><sheets>'
+      + sheets.map((s, i) => '<sheet name="' + x(s.name) + '" sheetId="' + (i+1) + '" r:id="rId' + (i+1) + '"/>').join('') + '</sheets></workbook>'});
+    files.push({name:'xl/_rels/workbook.xml.rels', data: HEAD + '<Relationships xmlns="' + P + '">'
+      + sheets.map((s, i) => '<Relationship Id="rId' + (i+1) + '" Type="' + R + '/worksheet" Target="worksheets/sheet' + (i+1) + '.xml"/>').join('')
+      + '<Relationship Id="rId' + (sheets.length+1) + '" Type="' + R + '/styles" Target="styles.xml"/></Relationships>'});
+    files.push({name:'xl/styles.xml', data: STYLES});
+    sheets.forEach((s, i) => files.push({name:'xl/worksheets/sheet' + (i+1) + '.xml', data: sheet(s.rows, s.widths, s.freeze)}));
+    return zip(files);
+  }
+  return {build};
+})();
+// XLSX-END
+
+net(); render(); fitHeader();
+})();
+</script>
+</body>
+</html>
