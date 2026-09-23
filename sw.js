@@ -1,5 +1,5 @@
 // kLa 現場紀錄 — 離線快取（版本需與 index.html 的 APP_VERSION 一致）
-const CACHE = 'kla-record-v1.0.1';
+const CACHE = 'kla-record-v1.1.0';
 const ASSETS = ['./', './index.html'];
 
 self.addEventListener('install', e => {

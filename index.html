@@ -83,6 +83,15 @@ main{max-width:640px;margin:0 auto;padding:14px 12px 48px}
 .tb-btns button{min-height:50px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:15px;padding:4px 6px}
 .tb-btns .b-now{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .tb-btns .b-clr{color:var(--danger)}
+.step{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:7px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:13px;font-style:normal;font-weight:800;vertical-align:1px}
+.tb-extra{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.fld{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700}
+.fld input{width:5.5em;font-size:19px;font-weight:700;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-variant-numeric:tabular-nums}
+.chips{margin-top:12px}
+.chip-label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+.chip-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.chip{min-height:46px;border-radius:9px;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:16px;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .warnline{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:var(--wip-bg);color:var(--wip);font-size:14px;font-weight:700}
 .note{display:block;margin-top:12px;font-size:14px;font-weight:700}
 .note textarea{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);resize:vertical;font-weight:400;font-size:16px}
@@ -94,16 +103,17 @@ main{max-width:640px;margin:0 auto;padding:14px 12px 48px}
 /* list */
 h2{font-size:15px;margin:24px 4px 6px;color:var(--muted)}
 .lg{font-size:13px;color:var(--muted);margin:12px 4px 6px;font-weight:700}
-.row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px}
+.row{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px}
 .row.st-wip{border-left-color:var(--wip)}
 .row.st-done{border-left-color:var(--done)}
 .row.is-cur{outline:2px solid var(--accent);outline-offset:-1px}
-.r-no{display:flex;flex-direction:column;align-items:center;min-width:3.4em;line-height:1.1}
+.r-no{display:flex;flex-direction:column;align-items:center;min-width:3.4em;line-height:1.1;grid-row:span 2}
 .r-no small{font-size:10px;color:var(--muted)}
 .r-no b{font-size:20px;font-variant-numeric:tabular-nums}
 .r-par{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:0 10px;font-variant-numeric:tabular-nums}
-.r-t{font-size:13px;text-align:right;font-variant-numeric:tabular-nums;line-height:1.4;white-space:nowrap}
+.r-t{font-size:12.5px;display:flex;flex-direction:column;font-variant-numeric:tabular-nums;line-height:1.45;white-space:nowrap;color:var(--ink)}
 .r-t .nil{color:var(--muted)}
+.r-t em{font-style:normal;color:var(--muted);margin-right:4px}
 
 /* tools */
 .tools{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
@@ -159,24 +169,7 @@ h2{font-size:15px;margin:24px 4px 6px;color:var(--muted)}
     <div class="grp" id="curGroup"></div>
     <dl class="params" id="params"></dl>
 
-    <div class="tb" id="tb-s">
-      <div class="tb-head"><span>大約開始時間</span><span class="tb-date" id="d-s"></span></div>
-      <div class="tb-time" id="t-s"></div>
-      <div class="tb-btns">
-        <button class="b-now" data-act="now" data-w="s">填入現在時間</button>
-        <button class="b-man" data-act="man" data-w="s">手動輸入</button>
-        <button class="b-clr" data-act="clr" data-w="s">清除</button>
-      </div>
-    </div>
-    <div class="tb" id="tb-e">
-      <div class="tb-head"><span>大約結束時間</span><span class="tb-date" id="d-e"></span></div>
-      <div class="tb-time" id="t-e"></div>
-      <div class="tb-btns">
-        <button class="b-now" data-act="now" data-w="e">填入現在時間</button>
-        <button class="b-man" data-act="man" data-w="e">手動輸入</button>
-        <button class="b-clr" data-act="clr" data-w="e">清除</button>
-      </div>
-    </div>
+    <div id="blocks"></div>
     <p class="warnline" id="orderWarn" hidden>結束時間早於開始時間，請確認。</p>
 
     <label class="note">註記
@@ -229,7 +222,7 @@ h2{font-size:15px;margin:24px 4px 6px;color:var(--muted)}
 <script>
 (function(){
 'use strict';
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.1.0';
 const KEY = 'kla-field-record';
 const $ = id => document.getElementById(id);
 $('ver').textContent = 'v' + APP_VERSION;
@@ -249,6 +242,16 @@ const DEV = {
   for (const v of [150,250,350]) for (const a of [1,1.5]) for (const r of [50,100,200,300,400])
     DEV['500'].rows.push({no:n++, temp:37, p:'0.1', vol:v, air:a, rpm:r, grp:'工作體積 ' + v + ' kg'});
 })();
+
+/* ---------- 四個時間點（依現場紀錄順序） ---------- */
+const TIMES = [
+  {k:'n1', o:'o1', label:'推氮開始時間', short:'推氮開始'},
+  {k:'n2', o:'o2', label:'推氮結束時間', short:'推氮結束'},
+  {k:'s',  o:'os', label:'大約開始時間', short:'大約開始'},
+  {k:'e',  o:'oe', label:'大約結束時間', short:'大約結束'}
+];
+const RPM_OPT = [100, 200, 300, 400];
+const VVM_OPT = [0.5, 1, 1.5, 2];
 
 /* ---------- 本機儲存 ---------- */
 function blank(){ return {ver:1, dev:'75', cur:{'75':1,'500':1}, rec:{'75':{},'500':{}}, saved:0}; }
@@ -293,25 +296,45 @@ function tw(d){
 const dev = () => DEV[S.dev];
 const curNo = () => S.cur[S.dev];
 const row = () => dev().rows[curNo() - 1];
-const EMPTY = {s:null, e:null, note:'', p:''};
+function newRec(){ return {n1:null, n2:null, s:null, e:null, o1:'', o2:'', os:'', oe:'', nrpm:'', nvvm:'', note:'', p:''}; }
 function rec(no, create){
   const m = S.rec[S.dev];
-  if (!m[no] && create) m[no] = {s:null, e:null, note:'', p:''};
-  return m[no] || EMPTY;
+  if (!m[no]){ if (!create) return newRec(); m[no] = newRec(); }
+  else { const d = newRec(); for (const k in d) if (!(k in m[no])) m[no][k] = d[k]; }
+  return m[no];
 }
-function status(r){ return (r.s && r.e) ? 'done' : (r.s || r.e) ? 'wip' : 'none'; }
+function status(r){
+  const n = TIMES.filter(t => r[t.k]).length;
+  return n === 0 ? 'none' : n === TIMES.length ? 'done' : 'wip';
+}
 const ST = {none:'未開始', wip:'進行中', done:'已完成'};
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ---------- 畫面 ---------- */
 function cell(k, v){ return '<div><dt>' + k + '</dt><dd>' + v + '</dd></div>'; }
-function paramCells(d, rw, r){
-  const p = rw.p !== null
-    ? rw.p + '<small>bar</small>'
-    : '<input id="pIn" class="p-in" inputmode="decimal" placeholder="填寫" value="' + esc(r.p || '') + '" aria-label="槽壓 bar"><small>bar</small>';
-  return cell('溫度', rw.temp + '<small>°C</small>') + cell('槽壓', p) + cell('工作體積', rw.vol + '<small>kg</small>')
+function paramCells(d, rw){
+  return cell('溫度', rw.temp + '<small>°C</small>') + cell('槽壓', rw.p + '<small>bar</small>') + cell('工作體積', rw.vol + '<small>kg</small>')
        + cell(d.air, rw.air + '<small>' + d.airU + '</small>') + cell('轉速', rw.rpm + '<small>rpm</small>')
        + cell('來源文件', '<span class="docno">' + d.doc + '</span>');
+}
+function chipRow(label, key, opts, cur){
+  return '<div class="chips"><span class="chip-label">' + label + '</span><div class="chip-row">'
+    + opts.map(o => '<button class="chip" data-set="' + key + '" data-val="' + o + '" aria-pressed="' + (String(cur) === String(o)) + '">' + o + '</button>').join('')
+    + '</div></div>';
+}
+function blockHTML(t, r, i){
+  const v = r[t.k];
+  let extra = '<label class="fld">pO2 (%)<input class="o-in" data-o="' + t.o + '" inputmode="decimal" placeholder="填寫" value="' + esc(r[t.o] || '') + '" aria-label="' + t.short + ' pO2 百分比"></label>';
+  if (t.k === 'n1') extra += chipRow('轉速 (rpm)', 'nrpm', RPM_OPT, r.nrpm) + chipRow('通氮量 (vvm)', 'nvvm', VVM_OPT, r.nvvm);
+  return '<div class="tb' + (v ? ' filled' : '') + '">'
+    + '<div class="tb-head"><span><i class="step">' + (i + 1) + '</i>' + t.label + '</span>'
+    + '<span class="tb-date">' + (v ? esc(v.d) + (v.m ? '<span class="man">手動</span>' : '') : '') + '</span></div>'
+    + '<div class="tb-time' + (v ? '' : ' empty') + '">' + (v ? v.t : '--:--:--') + '</div>'
+    + '<div class="tb-btns">'
+    + '<button class="b-now" data-act="now" data-w="' + t.k + '">填入現在時間</button>'
+    + '<button data-act="man" data-w="' + t.k + '">手動輸入</button>'
+    + '<button class="b-clr" data-act="clr" data-w="' + t.k + '">清除</button></div>'
+    + '<div class="tb-extra">' + extra + '</div></div>';
 }
 function render(){
   const d = dev(), rw = row(), r = rec(rw.no);
@@ -325,15 +348,13 @@ function render(){
   $('curPill').textContent = ST[st];
   $('curPill').className = 'pill st-' + st;
   $('curGroup').textContent = d.name + '　' + rw.grp;
-  $('params').innerHTML = paramCells(d, rw, r);
-  for (const w of ['s','e']){
-    const v = r[w];
-    $('tb-' + w).classList.toggle('filled', !!v);
-    $('t-' + w).textContent = v ? v.t : '--:--:--';
-    $('t-' + w).classList.toggle('empty', !v);
-    $('d-' + w).innerHTML = v ? esc(v.d) + (v.m ? '<span class="man">手動</span>' : '') : '';
-  }
-  $('orderWarn').hidden = !(r.s && r.e && (r.e.d + ' ' + r.e.t) < (r.s.d + ' ' + r.s.t));
+  $('params').innerHTML = paramCells(d, rw);
+  $('blocks').innerHTML = TIMES.map((t, i) => blockHTML(t, r, i)).join('');
+  const seq = TIMES.filter(t => r[t.k]).map(t => ({s:t.short, v:r[t.k].d + ' ' + r[t.k].t}));
+  let bad = '';
+  for (let i = 1; i < seq.length; i++) if (seq[i].v < seq[i-1].v) bad = seq[i-1].s + ' 晚於 ' + seq[i].s;
+  $('orderWarn').hidden = !bad;
+  if (bad) $('orderWarn').textContent = '時間順序異常：' + bad + '，請確認。';
   if (document.activeElement !== $('note')) $('note').value = r.note || '';
   $('prev').disabled = rw.no === 1;
   $('next').disabled = rw.no === d.rows.length;
@@ -342,6 +363,7 @@ function render(){
   renderList();
   showSaved();
 }
+const tcell = v => v ? v.t : '<span class="nil">--:--:--</span>';
 function renderList(){
   const d = dev(); let h = '', g = '';
   for (const rw of d.rows){
@@ -350,7 +372,7 @@ function renderList(){
     h += '<button class="row st-' + st + (rw.no === curNo() ? ' is-cur' : '') + '" data-no="' + rw.no + '" aria-label="Appendix ' + rw.no + ' ' + ST[st] + '">'
        + '<span class="r-no"><small>Appendix</small><b>' + rw.no + '</b></span>'
        + '<span class="r-par"><span>' + rw.temp + '°C</span><span>' + rw.vol + ' kg</span><span>' + rw.air + ' ' + d.airU + '</span><span>' + rw.rpm + ' rpm</span></span>'
-       + '<span class="r-t">起 ' + (r.s ? r.s.t : '<span class="nil">--:--:--</span>') + '<br>迄 ' + (r.e ? r.e.t : '<span class="nil">--:--:--</span>') + '</span>'
+       + '<span class="r-t"><span><em>推氮</em>' + tcell(r.n1) + ' → ' + tcell(r.n2) + '</span><span><em>大約</em>' + tcell(r.s) + ' → ' + tcell(r.e) + '</span></span>'
        + '</button>';
   }
   $('list').innerHTML = h;
@@ -372,21 +394,29 @@ const buzz = () => { try{ navigator.vibrate && navigator.vibrate(30); }catch(e){
 
 /* ---------- 三個按鈕 ---------- */
 $('cur').addEventListener('click', e => {
+  const c = e.target.closest('button[data-set]');
+  if (c){
+    const r2 = rec(row().no, true), k = c.dataset.set, v = c.dataset.val;
+    r2[k] = String(r2[k]) === v ? '' : v;
+    save(); render(); buzz();
+    return;
+  }
   const b = e.target.closest('button[data-act]'); if (!b) return;
-  const act = b.dataset.act, w = b.dataset.w, lbl = w === 's' ? '開始' : '結束';
+  const act = b.dataset.act, w = b.dataset.w;
+  const lbl = TIMES.find(t => t.k === w).label;
   const rw = row(), r = rec(rw.no);
   if (act === 'now'){
     const v = tw();
-    if (r[w] && !confirm('Appendix ' + rw.no + ' 已有' + lbl + '時間 ' + r[w].t + '\n要改成現在時間 ' + v.t + ' 嗎？')) return;
+    if (r[w] && !confirm('Appendix ' + rw.no + ' 已有' + lbl + ' ' + r[w].t + '\n要改成現在時間 ' + v.t + ' 嗎？')) return;
     rec(rw.no, true)[w] = v; save(); render(); buzz();
-    toast('Appendix ' + rw.no + ' ' + lbl + '時間 ' + v.t);
+    toast('Appendix ' + rw.no + '　' + lbl + ' ' + v.t);
   } else if (act === 'man'){
     openModal(w);
   } else if (act === 'clr'){
     if (!r[w]) { toast('這一格目前是空的'); return; }
-    if (!confirm('確定清除 Appendix ' + rw.no + ' 的' + lbl + '時間 ' + r[w].t + '？')) return;
+    if (!confirm('確定清除 Appendix ' + rw.no + ' 的' + lbl + ' ' + r[w].t + '？')) return;
     rec(rw.no, true)[w] = null; save(); render();
-    toast('已清除 Appendix ' + rw.no + ' ' + lbl + '時間');
+    toast('已清除 Appendix ' + rw.no + '　' + lbl);
   }
 });
 $('prev').addEventListener('click', () => { if (curNo() > 1) goTo(curNo() - 1, true); });
@@ -398,9 +428,9 @@ document.querySelector('.seg').addEventListener('click', e => {
   const b = e.target.closest('button[data-dev]'); if (!b || b.dataset.dev === S.dev) return;
   flushNote(); S.dev = b.dataset.dev; save(); render(); window.scrollTo({top:0});
 });
-$('params').addEventListener('input', e => {
-  if (e.target.id !== 'pIn') return;
-  rec(row().no, true).p = e.target.value.trim(); save();
+$('blocks').addEventListener('input', e => {
+  const o = e.target.dataset.o; if (!o) return;
+  rec(row().no, true)[o] = e.target.value.trim(); save();
 });
 
 /* 註記：輸入即存 */
@@ -420,7 +450,7 @@ let mWhich = null;
 function openModal(w){
   mWhich = w;
   const rw = row(), r = rec(rw.no), v = r[w] || tw();
-  $('mTitle').textContent = '手動輸入' + (w === 's' ? '開始' : '結束') + '時間';
+  $('mTitle').textContent = '手動輸入' + TIMES.find(t => t.k === w).label;
   $('mSub').textContent = dev().name + '　Appendix ' + rw.no;
   $('mDate').value = v.d;
   const [h, m, s] = v.t.split(':');
@@ -448,25 +478,29 @@ $('mOk').addEventListener('click', () => {
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d)){ $('mErr').textContent = '請選擇日期'; return; }
   const pad = x => String(+x).padStart(2, '0');
-  const rw = row(), lbl = mWhich === 's' ? '開始' : '結束';
+  const rw = row(), lbl = TIMES.find(t => t.k === mWhich).label;
   const t = pad(hv) + ':' + pad(mv) + ':' + pad(sv);
   rec(rw.no, true)[mWhich] = {d, t, m:1};
   save(); closeModal(); render(); buzz();
-  toast('Appendix ' + rw.no + ' ' + lbl + '時間 ' + t + '（手動）');
+  toast('Appendix ' + rw.no + '　' + lbl + ' ' + t + '（手動）');
 });
 
 /* ---------- 匯出 ---------- */
 function tableData(){
   const d = dev();
   const head = ['Appendix','溫度(°C)','槽壓(bar)','工作體積(kg)', d.air + '(' + d.airU + ')','轉速(rpm)',
-                '開始日期','大約開始時間(hh:mm:ss)','結束日期','大約結束時間(hh:mm:ss)','註記'];
+                '推氮開始日期','推氮開始時間(hh:mm:ss)','推氮開始pO2(%)','推氮轉速(rpm)','通氮量(vvm)',
+                '推氮結束日期','推氮結束時間(hh:mm:ss)','推氮結束pO2(%)',
+                '開始日期','大約開始時間(hh:mm:ss)','開始pO2(%)',
+                '結束日期','大約結束時間(hh:mm:ss)','結束pO2(%)','註記'];
+  const num = v => { const s = String(v == null ? '' : v).trim(); return s === '' ? '' : (isFinite(+s) ? +s : s); };
   const rows = d.rows.map(rw => {
     const r = rec(rw.no);
-    let p;
-    if (rw.p !== null) p = Number(rw.p);
-    else { const pv = (r.p || '').trim(); p = pv === '' ? '' : (isFinite(+pv) ? +pv : pv); }
-    return [rw.no, rw.temp, p, rw.vol, rw.air, rw.rpm,
-            r.s ? r.s.d : '', r.s ? r.s.t : '', r.e ? r.e.d : '', r.e ? r.e.t : '', r.note || ''];
+    return [rw.no, rw.temp, Number(rw.p), rw.vol, rw.air, rw.rpm,
+            r.n1 ? r.n1.d : '', r.n1 ? r.n1.t : '', num(r.o1), num(r.nrpm), num(r.nvvm),
+            r.n2 ? r.n2.d : '', r.n2 ? r.n2.t : '', num(r.o2),
+            r.s ? r.s.d : '', r.s ? r.s.t : '', num(r.os),
+            r.e ? r.e.d : '', r.e ? r.e.t : '', num(r.oe), r.note || ''];
   });
   return {head, rows};
 }
@@ -503,7 +537,7 @@ $('expXlsx').addEventListener('click', () => {
   const d = dev(), {head, rows} = tableData(), n = tw();
   const done = d.rows.filter(x => status(rec(x.no)) === 'done').length;
   const blob = XL.build([
-    {name:'紀錄', rows:[head, ...rows], widths:[10,10,10,12,14,10,12,22,12,22,30], freeze:true},
+    {name:'紀錄', rows:[head, ...rows], widths:[10,10,10,12,14,10,12,22,15,14,13,12,22,15,12,22,13,12,22,13,30], freeze:true},
     {name:'資訊', rows:[['項目','內容'],['設備', d.name],['來源文件', d.doc + ' Table 1'],
       ['匯出時間（台灣）', n.d + ' ' + n.t],['完成項目', done + ' / ' + d.rows.length],['App 版本','v' + APP_VERSION]],
       widths:[18,36], freeze:false}
